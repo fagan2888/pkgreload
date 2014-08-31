@@ -110,6 +110,11 @@ def pkgreload(module):
             modules[mname].update([_ for _ in imports if _ in modules])
             modules[mname].update([_ for _ in [mod] if _ is not mname])
 
+    # first reload everything in DFS order based on their paths. this makes
+    # sure if we've changed directories we reload properly.
+    for module in (mname for (_, mname, _) in files):
+        reload(importlib.import_module(module))
+
+    # now reload in a topological search so we take care of dependencies.
     for module in _toposort(modules):
-        print("Reloading '%s'" % module)
         reload(importlib.import_module(module))
