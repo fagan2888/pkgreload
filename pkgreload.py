@@ -27,7 +27,14 @@ def _find_modules(path):
             if filename.endswith('.py'):
                 ispackage = filename.endswith('__init__.py')
                 fname = os.path.join(root, filename)
-                mname = fname[:(-12 if ispackage else -3)].replace('/', '.')
+
+                # translate the path into a module name. note that the path can
+                # be either absolute or relative, but the module name must be
+                # relative to the package.
+                mname = fname[:(-12 if ispackage else -3)]
+                mname = os.path.relpath(mname, os.path.join(path, '..'))
+                mname = mname.replace('/', '.')
+
                 yield fname, mname, ispackage
 
 
@@ -106,4 +113,3 @@ def pkgreload(module):
     for module in _toposort(modules):
         print("Reloading '%s'" % module)
         reload(importlib.import_module(module))
-
