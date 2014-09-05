@@ -100,15 +100,18 @@ def pkgreload(module):
         for rel, imports in local_imports.findall(open(fname).read()):
             mod = rel.lstrip('.')
             num = len(rel) - len(mod) - (1 if ispackage else 0)
-            mod = \
-                mname if (num == 0) else '.'.join(path[:-num]) + \
-                ('.' + mod) if mod else ''
+
+            mod = ((mname if (num == 0) else '.'.join(path[:-num])) +
+                   (('.' + mod) if mod else ''))
 
             # get all the full imports.
             imports = [mod + '.' + _ for _ in imports.split(', ')]
 
-            modules[mname].update([_ for _ in imports if _ in modules])
-            modules[mname].update([_ for _ in [mod] if _ is not mname])
+            # FIXME: this will break if we use the "from blah import foo as
+            # bar" syntax to rename an import.
+
+            for obj in imports:
+                modules[mname].update([obj if (obj in modules) else mod])
 
     # first reload everything in DFS order based on their paths. this makes
     # sure if we've changed directories we reload properly.
