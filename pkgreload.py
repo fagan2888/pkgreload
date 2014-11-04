@@ -93,6 +93,7 @@ def pkgreload(module):
 
     # regular expression matching import statements.
     local_imports = re.compile(r'\s*from (\..*) import (.+)\s*')
+    as_import = re.compile(r'^\s*(\w+)(\s+as\s+\w+)?\s*$')
 
     for (fname, mname, ispackage) in files:
         path = mname.split('.')
@@ -105,10 +106,8 @@ def pkgreload(module):
                    (('.' + mod) if mod else ''))
 
             # get all the full imports.
-            imports = [mod + '.' + _ for _ in imports.split(', ')]
-
-            # FIXME: this will break if we use the "from blah import foo as
-            # bar" syntax to rename an import.
+            imports = [mod + '.' + as_import.sub(r'\1', _)
+                       for _ in imports.split(',')]
 
             for obj in imports:
                 modules[mname].update([obj if (obj in modules) else mod])
